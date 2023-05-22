@@ -1,7 +1,12 @@
 use std::fs::File;
-use std::io::{ Read, Error };
+use std::io::{ Read, Write };
 
-use crate::util::{ read_u16, read_u32 };
+use crate::little_endian::{ 
+    read_u16, 
+    read_u32,
+    write_u16,
+    write_u32,
+};
 
 #[derive(Debug)]
 pub struct FileHeader {
@@ -36,7 +41,7 @@ pub struct BMPFile {
 }
 
 impl BMPFile {
-    pub fn build (filepath: &str) -> Result<BMPFile, Error> {
+    pub fn read (filepath: &str) -> std::io::Result<BMPFile> {
     /* Open file ----------------------------------------------------------- */
         let mut file = File::open(filepath)?;
 
@@ -46,6 +51,7 @@ impl BMPFile {
 
     /* Read variable-length segments --------------------------------------- */
         let offset = file_header.offset as usize;
+
         let mut extra: Vec<u8> = BMPFile::read_extra(&mut file, offset)?;
         let mut image_data = BMPFile::read_image_data(&mut file, offset)?;
 
@@ -58,7 +64,7 @@ impl BMPFile {
         })
     }
 
-    fn read_fileheader (file: &mut File) -> Result<FileHeader, Error> {
+    fn read_fileheader (file: &mut File) -> std::io::Result<FileHeader> {
     /* Initialize buffer and read file into it ----------------------------- */
         let mut buffer = [0; FILEHEADER_SIZE];
         let n = file.read(&mut buffer)?;
@@ -81,7 +87,7 @@ impl BMPFile {
         })
     }
 
-    fn read_infoheader (file: &mut File) -> Result<InfoHeader, Error> {
+    fn read_infoheader (file: &mut File) -> std::io::Result<InfoHeader> {
     /* Initialize buffer and read file into it ----------------------------- */
         let mut buffer = [0; INFOHEADER_SIZE];
         let n = file.read(&mut buffer)?;
@@ -118,9 +124,9 @@ impl BMPFile {
         })
     }
 
-    fn read_extra (file: &mut File, offset: usize) -> Result<Vec<u8>, Error> {
+    fn read_extra (file: &mut File, offset: usize) -> std::io::Result<Vec<u8>> {
         let size = offset-FILEHEADER_SIZE-INFOHEADER_SIZE;
-        if size <= 0 {
+        if size < 0 {
             panic!("Offset too close?");
         }
         let mut buf = vec![0; size];
@@ -129,12 +135,75 @@ impl BMPFile {
         Ok(buf)
     }
 
-    fn read_image_data (file: &mut File, offset: usize) -> Result<Vec<u8>, Error> {
+    fn read_image_data (file: &mut File, offset: usize) -> std::io::Result<Vec<u8>> {
         let mut image_data: Vec<u8> = Vec::new();
 
         file.read_to_end(&mut image_data)?;
 
         Ok(image_data)
+    }
+
+    pub fn write (&self, path: &str) -> std::io::Result<()> {
+        let mut file = File::create(path)?;
+
+        self.write_file_header(&mut file);
+        self.write_info_header(&mut file);
+        self.write_extra(&mut file);
+        self.write_image_data(&mut file);
+
+        Ok(())
+    }
+
+    fn write_file_header (&self, file: &mut File) -> std::io::Result<()> {
+        let signature = write_u16 (self.file_header.signature);
+        let file_size = write_u32 (self.file_header.file_size);
+        let reserved = write_u32 (self.file_header.reserved);
+        let offset = write_u32 (self.file_header.offset);
+        
+        file.write(&signature)?;
+        file.write(&file_size)?;
+        file.write(&reserved)?;
+        file.write(&offset)?;
+        
+        Ok(())
+    }
+
+    fn write_info_header (&self, file: &mut File) -> std::io::Result<()> {
+        let size = write_u32 (self.info_header.size);
+        let width = write_u32 (self.info_header.width);
+        let height = write_u32 (self.info_header.height);
+        let planes = write_u16 (self.info_header.planes);
+        let bits_per_pixel = write_u16 (self.info_header.bits_per_pixel);
+        let compression = write_u32 (self.info_header.compression);
+        let image_size = write_u32 (self.info_header.image_size);
+        let h_resolution = write_u32 (self.info_header.h_resolution);
+        let v_resolution = write_u32 (self.info_header.v_resolution);
+        let num_colors = write_u32 (self.info_header.num_colors);
+        let important_colors = write_u32 (self.info_header.important_colors);
+
+        file.write(&size)?;
+        file.write(&width)?;
+        file.write(&height)?;
+        file.write(&planes)?;
+        file.write(&bits_per_pixel)?;
+        file.write(&compression)?;
+        file.write(&image_size)?;
+        file.write(&h_resolution)?;
+        file.write(&v_resolution)?;
+        file.write(&num_colors)?;
+        file.write(&important_colors)?;
+
+        Ok(())
+    }
+
+    fn write_extra (&self, file: &mut File) -> std::io::Result<()> {
+        file.write(&(self.extra))?;
+        Ok(())
+    }
+
+    fn write_image_data (&self, file: &mut File) -> std::io::Result<()> {
+        file.write(&(self.image_data))?;
+        Ok(())
     }
 }
 
@@ -144,13 +213,21 @@ mod tests {
 
 
     #[test]
-    fn build_bmpfile () {
-        let bmp_file = BMPFile::build("bmp_examples/lena.bmp")
-            .expect("Should be able to open lena.bmp");
+    fn read_bmp_file() {
+        let bmp_file = BMPFile::read("bmp_examples/greenland_grid_velo.bmp")
+            .expect("Should be able to open bmp");
 
         println!("file_header: {:?}", bmp_file.file_header);
         println!("info_header: {:?}", bmp_file.info_header);
+    }
 
+    #[test]
+    fn dup_bmp_file() {
+        let path = "bmp_examples/greenland_grid_velo.bmp";
+        let bmp_file = BMPFile::read(path)
+            .expect("Should be able to open bmp");
+
+        bmp_file.write("bmp_examples/dup.bmp");
     }
 
     #[test]

@@ -1,31 +1,5 @@
 //! utility functions
 
-/// Reads in a u16 from a byte array in little endian order
-pub fn read_u16 (bytes: &[u8]) -> u16 { 
-    let byte0 = bytes[0] as u16;
-    let byte1 = bytes[1] as u16;
-
-    let byte0 = byte0 << 0;
-    let byte1 = byte1 << 8;
-
-    byte0 + byte1
-}
-
-/// Reads in a u32 from a byte array in little endian order
-pub fn read_u32 (bytes : &[u8]) -> u32 {
-    let byte0 = bytes[0] as u32;
-    let byte1 = bytes[1] as u32;
-    let byte2 = bytes[2] as u32;
-    let byte3 = bytes[3] as u32;
-
-    let byte0 = byte0 << 0;
-    let byte1 = byte1 << 8;
-    let byte2 = byte2 << 16;
-    let byte3 = byte3 << 24;
-
-    byte0 + byte1 + byte2 + byte3
-}
-
 pub fn u8_sum_clamp (x: u8, y: u8) -> u8 {
     let sum: u16 = (x as u16) + (y as u16);
     if sum >= u8::MAX as u16 { 
@@ -54,75 +28,13 @@ pub fn u8_scale256 (x: u8, numerator: u8, denominator: u8) -> u8 {
     res as u8
 }
 
+pub fn calc_row_padding (width: usize) -> usize {
+    4 - (width*3) % 4
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    #[should_panic]
-    fn read_u16_fail() {
-        let bytes = [
-            0b00000001
-        ];
-
-        let read = read_u16(&bytes);
-    }
-
-    #[test]
-    fn read_u16_1() {
-        let bytes = [
-            0b00000001,
-            0b00000000
-        ];
-
-        let read = read_u16(&bytes);
-        assert_eq!(read, 0b00000000_00000001);
-    }
-
-    #[test]
-    fn read_u16_2() {
-        let bytes = [
-            0b00000000,
-            0b00000001
-        ];
-
-        let read = read_u16(&bytes);
-        assert_eq!(read, 0b00000001_00000000);
-    }
-
-    #[test]
-    fn read_u16_3() {
-        let bytes = [
-            0b01010101,
-            0b10101010
-        ];
-
-        let read = read_u16(&bytes);
-        assert_eq!(read, 0b10101010_01010101);
-    }
-
-    #[test]
-    fn read_u16_4() {
-        let bytes = [
-            0b11111111,
-            0b11111111
-        ];
-
-        let read = read_u16(&bytes);
-        assert_eq!(read, 0b11111111_11111111);
-    }
-
-    #[test]
-    fn read_u16_5() {
-        let bytes = [
-            0b00000000,
-            0b00000000,
-        ];
-
-        let read = read_u16(&bytes);
-        assert_eq!(read, 0b00000000_00000000);
-    }
-
 
     #[test]
     fn u8_sum_clamp_1() {

@@ -1,14 +1,24 @@
 use std::convert::From;
 use std::ops::{ Add, Sub };
 
-use super::util::{ u8_sum_clamp, u8_diff_clamp, u8_scale256 };
+use super::util::{ 
+    u8_sum_clamp, 
+    u8_diff_clamp, 
+    u8_scale256,
+    calc_row_padding,
+};
 use super::fileio::BMPFile;
 
+enum Pix {
+    P8(u8),
+    P24(Pixel),
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
-struct Pixel {
-    red: u8,
-    green: u8,
-    blue: u8,
+pub struct Pixel {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
 }
 
 impl Add for Pixel {
@@ -49,8 +59,7 @@ impl Pixel {
     pub fn scale256 (&mut self, numerator: u8, denominator: u8) {
         self.red = u8_scale256 (self.red, numerator, denominator);
         self.green = u8_scale256 (self.green , numerator, denominator);
-        self.blue = u8_scale256 (self.blue , numerator, denominator);
-    }
+        self.blue = u8_scale256 (self.blue , numerator, denominator); }
 }
 
 pub struct Surface {
@@ -63,15 +72,13 @@ impl Surface {
     pub fn new(width: usize, height: usize) -> Surface {
         let mut data:Vec<Pixel> = Vec::new();
 
-        for i in 0..width {
-            for j in 0..height {
-                let mut p = Pixel { 
-                    red: 0, 
-                    green: 0, 
-                    blue: 0 
-                };
-                data.push(p);
-            }
+        for i in 0..height*width {
+            let mut p = Pixel { 
+                red: 0, 
+                green: 0, 
+                blue: 0 
+            };
+            data.push(p);
         }
 
         Surface {
@@ -98,14 +105,42 @@ impl Surface {
     }
 }
 
-impl From<BMPFile> for Surface {
-    fn from(bmp_file: BMPFile) -> Self {
-        let width = bmp_file.info_header.width;
-        let height = bmp_file.info_header.height;
+impl From<&BMPFile> for Surface {
+    fn from(bmp_file: &BMPFile) -> Self {
+        let width = bmp_file.info_header.width as usize;
+        let height = bmp_file.info_header.height as usize;
         let mut data:Vec<Pixel> = Vec::new();
 
-        let iter = bmp_file.image_data.iter();
+        let mut iter = bmp_file.image_data.iter();
+        let row_padding =  calc_row_padding (width);
 
+        println!("width: {}, height: {}", width, height);
+        println!("row_padding: {}", row_padding);
+
+        for x in 0..height {
+            for y in 0..width {
+                let red = iter.next().unwrap();
+                let green = iter.next().unwrap();
+                let blue = iter.next().unwrap();
+                let mut p = Pixel {
+                    red: *red,
+                    green: *green,
+                    blue: *blue,
+                };
+                data.push(p);
+            }
+            for i in 0..row_padding {
+                let discard = iter.next().unwrap();
+            }
+        }
+
+        println!("data.len() : {}", data.len());
+
+        Surface {
+            data, 
+            width,
+            height,
+        }
     }
 }
 
@@ -119,12 +154,19 @@ mod tests {
     }
 
     #[test]
-    fn pixel_add_1 () {
-        let A = Pixel { red: 34, green: 92, blue: 17 };
-        let B = Pixel { red: 58, green: 12, blue: 148 };
+    fn from_bmp_file() {
+        let mut bmp_file = BMPFile::read("bmp_examples/greenland_grid_velo.bmp")
+            .expect ("Should be able to open bmp."); 
+        let surface = Surface::from(&bmp_file);
+    }
 
-        let C = A + B;
-        assert_eq!(C, Pixel { red:34+58, green:92+12, blue:17+148 });
+    #[test]
+    fn pixel_add_1 () {
+        let a = Pixel { red: 34, green: 92, blue: 17 };
+        let b = Pixel { red: 58, green: 12, blue: 148 };
+
+        let c = a + b;
+        assert_eq!(c, Pixel { red:34+58, green:92+12, blue:17+148 });
     }
 
     #[test]
