@@ -1,11 +1,9 @@
-use std::convert::From;
 use std::ops::{ Add, Sub };
 
 use super::util::{ 
     u8_sum_clamp, 
     u8_diff_clamp, 
     u8_scale256,
-    calc_row_padding,
 };
 use super::fileio::BMPFile;
 
@@ -72,7 +70,7 @@ impl Surface {
     pub fn new(width: usize, height: usize) -> Surface {
         let mut data:Vec<Pixel> = Vec::new();
 
-        for i in 0..height*width {
+        for _i in 0..height*width {
             let mut p = Pixel { 
                 red: 0, 
                 green: 0, 
@@ -105,6 +103,7 @@ impl Surface {
     }
 }
 
+/*
 impl From<&BMPFile> for Surface {
     fn from(bmp_file: &BMPFile) -> Self {
         let width = bmp_file.info_header.width as usize;
@@ -143,6 +142,7 @@ impl From<&BMPFile> for Surface {
         }
     }
 }
+*/
 
 #[cfg(test)]
 mod tests {
@@ -153,12 +153,14 @@ mod tests {
         let surface = Surface::new(100, 100);
     }
 
+    /*
     #[test]
     fn from_bmp_file() {
         let mut bmp_file = BMPFile::read("bmp_examples/greenland_grid_velo.bmp")
             .expect ("Should be able to open bmp."); 
         let surface = Surface::from(&bmp_file);
     }
+    */
 
     #[test]
     fn pixel_add_1 () {

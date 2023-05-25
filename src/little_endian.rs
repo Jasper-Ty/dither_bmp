@@ -1,8 +1,4 @@
-//! little endian.rs
-//!
-
-use std::io::Write;
-
+/* todo when I become a Rust god: inline assembly these mfs >:) */
 
 /// Reads in a u16 from a byte array in little endian order
 pub fn read_u16 (bytes: &[u8]) -> u16 { 
@@ -33,7 +29,7 @@ pub fn read_u32 (bytes: &[u8]) -> u32 {
 
 
 /// Creates a byte array from a u16 in little endian order
-pub fn write_u16 (x: u16) -> [u8; 2] {
+pub fn bytes_u16 (x: u16) -> [u8; 2] {
     let byte0 = ((x >> 0) & 0x00FF) as u8;
     let byte1 = ((x >> 8) & 0x00FF) as u8;
     [byte0, byte1]
@@ -41,7 +37,7 @@ pub fn write_u16 (x: u16) -> [u8; 2] {
 
 
 /// Creates a byte array from a u32 in little endian order
-pub fn write_u32 (x: u32) -> [u8; 4] {
+pub fn bytes_u32 (x: u32) -> [u8; 4] {
     let byte0 = ((x >> 0) & 0x00FF) as u8;
     let byte1 = ((x >> 8) & 0x00FF) as u8;
     let byte2 = ((x >> 16) & 0x00FF) as u8;
@@ -119,4 +115,16 @@ mod tests {
         assert_eq!(read, 0b00000000_00000000);
     }
 
+    #[test]
+    fn read_u32_1() {
+        let bytes = [
+            0x12,
+            0x34,
+            0x56,
+            0x78,
+        ];
+
+        let read = read_u32(&bytes);
+        assert_eq!(read, 0x78563412);
+    }
 }
