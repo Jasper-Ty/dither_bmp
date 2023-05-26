@@ -38,7 +38,7 @@ impl SurfaceRGB {
     ) -> io::Result<SurfaceRGB> {
         let mut data = Vec::new();
         let padding = 4 - ( (width * 3) % 4 );
-        let mut bin = vec![0; padding as usize];
+        let mut padding_buf = vec![0; padding as usize];
         let mut buf = [0; 3];
 
         for _ in 0..height {
@@ -47,7 +47,7 @@ impl SurfaceRGB {
                 let p = RGB::from(&buf);
                 data.push(p);
             }
-            r.read(&mut bin);
+            r.read(&mut padding_buf);
         }
 
         Ok(SurfaceRGB {
@@ -57,11 +57,11 @@ impl SurfaceRGB {
         })
     }
 
-    pub fn get(&mut self, x: u32, y: u32) -> Option<&RGB> {
+    pub fn get(&self, x: u32, y: u32) -> Option<&RGB> {
         if x >= self.width || y >= self.height {
             return None;
         }
-        let idx = y*self.height + x;
+        let idx = y*self.width + x;
         let idx = idx as usize;
 
         Some(&self.data[idx])
@@ -72,13 +72,31 @@ impl SurfaceRGB {
             return None;
         }
 
-        let idx = y*self.height + x;
+        let idx = y*self.width + x;
         let idx = idx as usize;
 
         Some(&mut self.data[idx])
     }
 
-    pub fn write_to(&self w: impl Write) {
+    pub fn write_to(&self, w: &mut impl Write) -> io::Result<()> {
+        let padding = 4 - ( (self.width * 3) % 4 );
+        let mut padding_buf: Vec<u8> = vec![0; padding as usize];
+        let mut buf = [0; 3];
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let p = self.get(x, y).unwrap();
+                buf[0] = p.red;
+                buf[1] = p.green;
+                buf[2] = p.blue;
+                w.write(&buf)?;
+                w.flush()?;
+            }
+            w.write(&padding_buf)?;
+            w.flush()?;
+        }
+
+        Ok(())
     }
 }
 

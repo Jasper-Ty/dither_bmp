@@ -1,8 +1,13 @@
 use std::fs::File;
 use std::io::{ 
     self, 
+
     Seek, 
     SeekFrom, 
+
+    Read,
+    Write,
+
     Error, 
     ErrorKind
 };
@@ -28,6 +33,7 @@ fn main() -> io::Result<()> {
 
     let info = bmp::BmpInfo::from_file(&mut f)?;
 
+
     if info.bits_per_pixel != 24 {
         return Err(Error::new(ErrorKind::Other, "CAN'T DO NON 24-BIT COLOR SORRY"))
     }
@@ -35,7 +41,20 @@ fn main() -> io::Result<()> {
     f.seek(SeekFrom::Start(info.offset))?;
     let mut surface = SurfaceRGB::from_read(&mut f, info.width, info.height)?;
 
-    dither_rgb(&mut surface, 16);
+    dither_rgb(&mut surface, 64);
+
+    let mut initial = vec![0; info.offset as usize];
+    f.seek(SeekFrom::Start(0))?;
+    f.read(&mut initial)?;
+    println!("{:?}", initial);
+
+    let mut out = File::create("out.bmp")?;
+
+    out.write(&initial)?;
+    out.flush()?;
+
+    surface.write_to(&mut out)?;
+    out.flush()?;
 
     Ok(())
 }

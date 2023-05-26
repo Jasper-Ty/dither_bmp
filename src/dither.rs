@@ -2,12 +2,12 @@ use crate::surface::{ RGB, SurfaceRGB };
 
 pub fn find_nearest(p: &RGB, n: u8) -> (RGB, RGB) {
     let err_red = p.red % n;
-    let err_green = p.red % n;
-    let err_blue = p.red % n;
+    let err_green = p.green % n;
+    let err_blue = p.blue % n;
 
-    let red = p.red - err_red;
-    let green = p.red - err_green;
-    let blue = p.red - err_blue;
+    let red = n * (p.red / n);
+    let green = n * (p.green / n);
+    let blue = n * (p.blue / n);
 
     let nearest = RGB {
         red,
@@ -28,9 +28,8 @@ pub fn dither_rgb(surface: &mut SurfaceRGB, n: u8) {
         for x in 0..surface.width {
             let p = surface.get_mut(x, y).unwrap();
             let (nearest, _) = find_nearest(p, n);
-            p.red = nearest.red;
-            p.green = nearest.green;
-            p.blue = nearest.blue;
+            let idx = y*surface.width + x;
+            surface.data[idx as usize] = nearest;
         }
     }
 }
