@@ -4,3 +4,4 @@ pub mod surface;
 pub mod dither;
 pub mod clamped;
 pub mod pixel;
+pub mod quantize;

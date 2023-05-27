@@ -23,7 +23,6 @@ impl<T> Surface<T> {
     }
 }
 
-
 pub struct SurfaceIterator<'a, T> {
     surface: &'a Surface<T>,
     x: u32,

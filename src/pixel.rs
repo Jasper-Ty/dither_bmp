@@ -69,28 +69,6 @@ impl Div<u8> for Pix<i32> {
     }
 }
 
-pub fn nearest(x: u8, N: u8, K: u8) -> u8 {
-    let width = K / (N-1);
-    let idx = if x%width <= width/2 {
-        x / width
-    } else {
-        x / width + 1
-    };
-    width * idx
-}
-
-pub fn get_possible_palettes(K: u8) -> Vec<u8> {
-    println!("GETTING POSSIBLE PALETTES");
-    let mut valid: Vec<u8> = Vec::new();
-    for n in 1..=K {
-        if K % n == 0 {
-            valid.push(n+1);
-            println!("valid: {}", n+1);
-        }
-    }
-    valid
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
