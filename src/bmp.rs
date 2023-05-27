@@ -60,3 +60,31 @@ impl BmpInfo {
     }
 }
 
+use crate::surface::{Surface, RGB};
+pub fn read_image(info: &BmpInfo, f: &mut File) -> io::Result<Surface<RGB<i32>>> {
+    let pack_len = info.width*3;
+    let full_len = match (pack_len) % 4 {
+        0 => pack_len,
+        r => pack_len-r+4,
+    } as u64;
+
+    let mut surface = Surface::new(
+        info.width,
+        info.height,
+        RGB { red: 0, green: 0, blue: 0 },
+    );
+
+    for y in 0..info.height {
+        let offset = info.offset + (y as u64)*full_len;
+        f.seek(SeekFrom::Start(offset))?;
+        for x in 0..info.width {
+            surface[(x, y)] = RGB {
+                red: f.read_u8()? as i32,
+                green: f.read_u8()? as i32,
+                blue: f.read_u8()? as i32,
+            };
+        }
+    }
+
+    Ok(surface)
+}

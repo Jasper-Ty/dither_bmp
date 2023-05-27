@@ -1,6 +1,6 @@
 use std::io::{self, Read};
 
-pub trait ReadLittleEndian {
+pub trait ReadLittleEndian: Read {
     fn read_u8 (&mut self) -> io::Result<u8>;
     fn read_u16 (&mut self) -> io::Result<u16>;
     fn read_u32 (&mut self) -> io::Result<u32>;
@@ -9,33 +9,17 @@ impl<T: Read> ReadLittleEndian for T {
     fn read_u8 (&mut self) -> io::Result<u8> {
         let mut buf = [0; 1];
         self.read_exact(&mut buf)?;
-
-        Ok(buf[0])
+        Ok(u8::from_le_bytes(buf))
     }
     fn read_u16 (&mut self) -> io::Result<u16>{
         let mut buf = [0; 2];
         self.read_exact(&mut buf)?;
-
-        let b0 = buf[0] as u16;
-        let b1 = buf[1] as u16;
-
-        Ok((b0 << 0) | (b1 << 8))
+        Ok(u16::from_le_bytes(buf))
     }
     fn read_u32 (&mut self) -> io::Result<u32> {
         let mut buf = [0; 4];
         self.read_exact(&mut buf)?;
-
-        let b0 = buf[0] as u32;
-        let b1 = buf[1] as u32;
-        let b2 = buf[2] as u32;
-        let b3 = buf[3] as u32;
-
-        Ok(
-            (b0 << 0) |
-            (b1 << 8) |
-            (b2 << 16) |
-            (b3 << 24) 
-        )
+        Ok(u32::from_le_bytes(buf))
     }
 
 }
@@ -44,7 +28,6 @@ impl<T: Read> ReadLittleEndian for T {
 mod tests {
     use super::*;
     use std::cmp;
-    use std::iter;
 
     struct FakeReader(Vec<u8>);
     impl Read for FakeReader {
