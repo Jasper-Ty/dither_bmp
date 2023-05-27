@@ -4,104 +4,75 @@ use std::io::{
     Read,
     Write,
 };
+use std::ops::{ Index, IndexMut };
 
-#[derive(Debug)]
-pub struct RGB {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
-}
-impl From<&[u8; 3]> for RGB {
-    fn from(buf: &[u8; 3]) -> RGB {
-        let red = buf[0];
-        let green = buf[1];
-        let blue = buf[2];
-        RGB {
-            red,
-            green,
-            blue,
-        }
-    }
-}
 
-#[derive(Debug)]
-pub struct SurfaceRGB {
-    pub data: Vec<RGB>,
+pub struct Surface<T> {
+    pub data: Vec<T>,
     pub width: u32,
     pub height: u32,
 }
-impl SurfaceRGB {
-    pub fn from_read(
-        r: &mut impl Read, 
-        width: u32, 
-        height: u32,
-    ) -> io::Result<SurfaceRGB> {
-        let mut data = Vec::new();
-        let padding = 4 - ( (width * 3) % 4 );
-        let mut padding_buf = vec![0; padding as usize];
-        let mut buf = [0; 3];
+impl<T> Index<(u32, u32)> for Surface<T> {
+    type Output = T;
 
-        for _ in 0..height {
-            for _ in 0..width {
-                r.read(&mut buf)?;
-                let p = RGB::from(&buf);
-                data.push(p);
-            }
-            r.read(&mut padding_buf);
-        }
-
-        Ok(SurfaceRGB {
-            data,
-            width,
-            height,
-        })
+    fn index(&self, pair: (u32, u32)) -> &Self::Output {
+        let x = pair.0;
+        let y = pair.1;
+        let idx = ( y * self.width ) + x;
+        &(self.data[idx as usize])
     }
-
-    pub fn get(&self, x: u32, y: u32) -> Option<&RGB> {
-        if x >= self.width || y >= self.height {
-            return None;
-        }
-        let idx = y*self.width + x;
-        let idx = idx as usize;
-
-        Some(&self.data[idx])
-    }
-
-    pub fn get_mut(&mut self, x: u32, y: u32) -> Option<&mut RGB> {
-        if x >= self.width || y >= self.height {
-            return None;
-        }
-
-        let idx = y*self.width + x;
-        let idx = idx as usize;
-
-        Some(&mut self.data[idx])
-    }
-
-    pub fn write_to(&self, w: &mut impl Write) -> io::Result<()> {
-        let padding = 4 - ( (self.width * 3) % 4 );
-        let mut padding_buf: Vec<u8> = vec![0; padding as usize];
-        let mut buf = [0; 3];
-
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let p = self.get(x, y).unwrap();
-                buf[0] = p.red;
-                buf[1] = p.green;
-                buf[2] = p.blue;
-                w.write(&buf)?;
-                w.flush()?;
-            }
-            w.write(&padding_buf)?;
-            w.flush()?;
-        }
-
-        Ok(())
+}
+impl<T> IndexMut<(u32, u32)> for Surface<T> {
+    fn index_mut(&mut self, pair: (u32, u32)) -> &mut T {
+        let x = pair.0;
+        let y = pair.1;
+        let idx = ( y * self.width ) + x;
+        &mut(self.data[idx as usize])
     }
 }
 
-struct SurfaceG {
-    data: Vec<u8>,
-    width: u32,
-    height: u32,
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn indexing() {
+        let data: Vec<u8> = vec![1, 2, 3 ,4];
+        let width = 2;
+        let height = 2;
+
+        let surface = Surface {
+            data,
+            width,
+            height,
+        };
+
+        assert_eq!(1, surface[(0,0)]);
+        assert_eq!(2, surface[(1,0)]);
+        assert_eq!(3, surface[(0,1)]);
+        assert_eq!(4, surface[(1,1)]);
+    }
+
+    #[test]
+    fn assigning() {
+        let data: Vec<u8> = vec![1, 2, 3 ,4];
+        let width = 2;
+        let height = 2;
+
+        let mut surface = Surface {
+            data,
+            width,
+            height,
+        };
+
+        surface[(0,0)] = 5;
+        surface[(1,0)] = 6;
+        surface[(0,1)] = 7;
+        surface[(1,1)] = 8;
+
+        assert_eq!(5, surface[(0,0)]);
+        assert_eq!(6, surface[(1,0)]);
+        assert_eq!(7, surface[(0,1)]);
+        assert_eq!(8, surface[(1,1)]);
+    }
 }

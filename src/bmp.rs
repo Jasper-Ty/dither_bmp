@@ -10,7 +10,7 @@ use std::io::{
     ErrorKind 
 };
 
-use super::util::{ read_u16, read_u32 };
+use super::util::ReadLittleEndian;
 
 pub fn check_sig(f: &mut File) -> io::Result<()> {
     let mut buf = [0; 2];
@@ -44,13 +44,13 @@ pub struct BmpInfo {
 impl BmpInfo {
     pub fn from_file(f: &mut File) -> io::Result<BmpInfo> {
         f.seek(SeekFrom::Start(10))?;
-        let offset = read_u32(f)? as u64;
+        let offset = f.read_u32()? as u64;
         f.seek(SeekFrom::Start(18))?;
-        let width = read_u32(f)?;
+        let width = f.read_u32()?;
         f.seek(SeekFrom::Start(22))?;
-        let height = read_u32(f)?;
+        let height = f.read_u32()?;
         f.seek(SeekFrom::Start(28))?;
-        let bits_per_pixel = read_u16(f)?;
+        let bits_per_pixel = f.read_u16()?; 
         Ok(BmpInfo {
             offset,
             width,
