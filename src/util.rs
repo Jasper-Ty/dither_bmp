@@ -8,13 +8,13 @@ pub trait ReadLittleEndian {
 impl<T: Read> ReadLittleEndian for T {
     fn read_u8 (&mut self) -> io::Result<u8> {
         let mut buf = [0; 1];
-        self.read(&mut buf)?;
+        self.read_exact(&mut buf)?;
 
         Ok(buf[0])
     }
     fn read_u16 (&mut self) -> io::Result<u16>{
         let mut buf = [0; 2];
-        self.read(&mut buf)?;
+        self.read_exact(&mut buf)?;
 
         let b0 = buf[0] as u16;
         let b1 = buf[1] as u16;
@@ -23,7 +23,7 @@ impl<T: Read> ReadLittleEndian for T {
     }
     fn read_u32 (&mut self) -> io::Result<u32> {
         let mut buf = [0; 4];
-        self.read(&mut buf)?;
+        self.read_exact(&mut buf)?;
 
         let b0 = buf[0] as u32;
         let b1 = buf[1] as u32;
@@ -40,11 +40,41 @@ impl<T: Read> ReadLittleEndian for T {
 
 }
 
-pub fn add_u8_clamp (x: u8, y: u8) -> u8 {
-    let sum: u16 = (x as u16) + (y as u16);
-    if sum > 255 {
-        255
-    } else {
-        sum as u8
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cmp;
+    use std::iter;
+
+    struct FakeReader(Vec<u8>);
+    impl Read for FakeReader {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            let min = cmp::min(buf.len(), self.0.len());
+            for i in 0..min {
+                buf[i] = self.0[i];
+            }
+            Ok(min)
+        }
+    }
+
+    #[test]
+    fn test_read_u8() {
+        let mut r = FakeReader(vec![73]);
+        let x: u8 = r.read_u8().unwrap();
+        assert_eq!(x, 73);
+    }
+
+    #[test]
+    fn test_read_u16() {
+        let mut r = FakeReader(vec![0xCD, 0xAB]);
+        let x: u16 = r.read_u16().unwrap();
+        assert_eq!(x, 0xABCD)
+    }
+
+    #[test]
+    fn test_read_u32() {
+        let mut r = FakeReader(vec![0x01, 0xEF, 0xCD, 0xAB]);
+        let x: u32 = r.read_u32().unwrap();
+        assert_eq!(x, 0xABCDEF01)
     }
 }
