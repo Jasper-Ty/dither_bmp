@@ -5,7 +5,24 @@ pub struct Surface<T> {
     width: u32,
     height: u32,
 }
-impl<T> Surface<T> {
+impl<T: Clone> Surface<T> {
+    pub fn new(width: u32, height: u32, fill: T) -> Surface<T>{
+        let mut data: Vec<T> = Vec::with_capacity((width*height) as usize);
+        for _ in 0..width*height {
+            data.push(fill.clone());
+        }
+        Surface {
+            data,
+            width,
+            height
+        }
+    }
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+    pub fn height(&self) -> u32 {
+        self.height
+    }
     pub fn get(&self, x: u32, y: u32) -> Option<&T> {
         let idx = y*(self.width)+x;
         self.data.get(idx as usize)
@@ -21,6 +38,8 @@ impl<T> Surface<T> {
             y: 0,
         }
     }
+}
+impl<T> Surface<T> {
 }
 
 pub struct SurfaceIterator<'a, T> {
@@ -53,25 +72,6 @@ impl<'a, T> Iterator for SurfaceIterator<'a, T> {
     }
 }
 
-impl<T: Clone> Surface<T> {
-    pub fn new(width: u32, height: u32, fill: T) -> Surface<T>{
-        let mut data: Vec<T> = Vec::with_capacity((width*height) as usize);
-        for _ in 0..width*height {
-            data.push(fill.clone());
-        }
-        Surface {
-            data,
-            width,
-            height
-        }
-    }
-    pub fn width(&self) -> u32 {
-        self.width
-    }
-    pub fn height(&self) -> u32 {
-        self.height
-    }
-}
 
 impl<T> Index<(u32, u32)> for Surface<T> {
     type Output = T;

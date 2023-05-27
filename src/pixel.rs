@@ -1,4 +1,4 @@
-use std::ops::{ Add, Sub, Mul, Div };
+use std::ops::{ Add, Sub, Mul, Div, AddAssign };
 use std::convert::From;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -22,6 +22,23 @@ where
             Pix::Gray(s) => match other {
                 Pix::RGB(ro, go, bo) => Pix::RGB(s+ro, s+go, s+bo),
                 Pix::Gray(o) => Pix::Gray(s+o)
+            }
+        }
+    }
+}
+impl<T> AddAssign for Pix<T>
+where
+    T: Copy+Add<Output=T>
+{
+    fn add_assign(&mut self, other: Self) {
+        *self = match self {
+            Pix::RGB(rs, gs, bs) => match other {
+                Pix::RGB(ro, go, bo) => Pix::RGB(*rs+ro, *gs+go, *bs+bo),
+                Pix::Gray(o) => Pix::RGB(*rs+o, *gs+o, *bs+o)
+            },
+            Pix::Gray(s) => match other {
+                Pix::RGB(ro, go, bo) => Pix::RGB(*s+ro, *s+go, *s+bo),
+                Pix::Gray(o) => Pix::Gray(*s+o)
             }
         }
     }
@@ -65,6 +82,19 @@ impl Div<u8> for Pix<i32> {
         match self {
             Pix::RGB(r, g, b) => Pix::RGB(r/d, g/d, b/d),
             Pix::Gray(g) => Pix::Gray(g/d),
+        }
+    }
+}
+
+impl From<Pix<i32>> for Pix<u8> {
+    fn from(pixel: Pix<i32>) -> Self {
+        match pixel {
+            Pix::RGB(r, g, b) => Pix::RGB(
+                r.clamp(0,255) as u8, 
+                g.clamp(0,255) as u8, 
+                b.clamp(0,255) as u8, 
+            ),
+            Pix::Gray(g) => Pix::Gray(g.clamp(0,255) as u8),
         }
     }
 }

@@ -24,22 +24,44 @@ impl QuantizationLevel {
     }
 }
 
-use crate::pixel::Pix;
-pub fn quantize_pix(p: Pix<u8>, level: &QuantizationLevel) -> Pix<u8> {
-    match p {
-        Pix::RGB(r, g, b) => Pix::RGB(quantize_u8(r, level), quantize_u8(g, level), quantize_u8(b, level)),
-        Pix::Gray(g) => Pix::Gray(quantize_u8(g, level)),
-    }
 
+pub trait Quantize {
+    fn quantize(&self, q: &QuantizationLevel) -> Self;
+}
+impl Quantize for u8 {
+    fn quantize(&self, q: &QuantizationLevel) -> Self {
+        let x = *self;
+        let n = q.num_values();
+        let width = 255 / (n-1);
+        let idx = if x%width <= width/2 {
+            x / width
+        } else {
+            x / width + 1
+        };
+        width * idx
+    }
+}
+impl Quantize for i32 {
+    fn quantize(&self, q: &QuantizationLevel) -> Self {
+        let x = (*self).clamp(0, 255) as u8;
+        x.quantize(q) as i32
+    }
 }
 
-fn quantize_u8(x: u8, level: &QuantizationLevel) -> u8 {
-    let N = level.num_values();
-    let width = 255 / (N-1);
-    let idx = if x%width <= width/2 {
-        x / width
-    } else {
-        x / width + 1
-    };
-    width * idx
+use crate::pixel::Pix;
+impl Quantize for Pix<u8> {
+    fn quantize(&self, q: &QuantizationLevel) -> Self {
+        match self {
+            Pix::RGB(r, g, b) => Pix::RGB(r.quantize(q), g.quantize(q), b.quantize(q)),
+            Pix::Gray(g) => Pix::Gray(g.quantize(q)),
+        }
+    }
+}
+impl Quantize for Pix<i32> {
+    fn quantize(&self, q: &QuantizationLevel) -> Self {
+        match self {
+            Pix::RGB(r, g, b) => Pix::RGB(r.quantize(q), g.quantize(q), b.quantize(q)),
+            Pix::Gray(g) => Pix::Gray(g.quantize(q)),
+        }
+    }
 }

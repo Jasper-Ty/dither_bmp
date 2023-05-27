@@ -21,7 +21,6 @@ impl<T: Read> ReadLittleEndian for T {
         self.read_exact(&mut buf)?;
         Ok(u32::from_le_bytes(buf))
     }
-
 }
 
 #[cfg(test)]
