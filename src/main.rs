@@ -1,20 +1,8 @@
 use std::fs::File;
-use std::io::{ 
-    self, 
-
-    Seek, 
-    SeekFrom, 
-
-    Read,
-    Write,
-
-    Error, 
-    ErrorKind
-};
+use std::io;
 use std::env;
 
 use dither_bmp::bmp;
-use dither_bmp::surface::{ Surface, RGB };
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -42,5 +30,5 @@ fn main() -> io::Result<()> {
 }
 
 fn dither_24 (info: &bmp::BmpInfo, f: &mut File) {
-    let surface = bmp::read_image(&info, f);
+    unimplemented!();
 }

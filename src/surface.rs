@@ -1,7 +1,4 @@
-use std::convert::From;
 use std::ops::{ Index, IndexMut };
-use std::cmp::Ord;
-
 
 pub struct Surface<T> {
     data: Vec<T>,
@@ -59,7 +56,7 @@ impl<'a, T> Iterator for SurfaceIterator<'a, T> {
 
 impl<T: Clone> Surface<T> {
     pub fn new(width: u32, height: u32, fill: T) -> Surface<T>{
-        let mut data: Vec<T> = Vec::new();
+        let mut data: Vec<T> = Vec::with_capacity((width*height) as usize);
         for _ in 0..width*height {
             data.push(fill.clone());
         }
@@ -76,6 +73,7 @@ impl<T: Clone> Surface<T> {
         self.height
     }
 }
+
 impl<T> Index<(u32, u32)> for Surface<T> {
     type Output = T;
 
@@ -94,73 +92,6 @@ impl<T> IndexMut<(u32, u32)> for Surface<T> {
         &mut(self.data[idx as usize])
     }
 }
-
-use std::ops::{ Add, Sub };
-#[derive(Clone)]
-pub struct RGB<T: Clone> {
-    pub red: T,
-    pub green: T,
-    pub blue: T,
-}
-impl Add for RGB<i32> {
-    type Output = Self;
-
-    fn add (self, other: Self) -> Self {
-        let red = self.red + other.red;
-        let green = self.green + other.red;
-        let blue = self.red + other.red;
-        RGB {
-            red,
-            green,
-            blue,
-        }
-    }
-}
-impl Sub for RGB<i32> {
-    type Output = Self;
-
-    fn sub (self, other: Self) -> Self {
-        let red = self.red - other.red;
-        let green = self.green - other.red;
-        let blue = self.red + other.red;
-        RGB {
-            red,
-            green,
-            blue,
-        }
-    }
-}
-
-impl From<&RGB<i32>> for RGB<u8> {
-    fn from(rgb: &RGB<i32>) -> Self {
-        let red = rgb.red.clamp(0, 255) as u8;
-        let green = rgb.red.clamp(0, 255) as u8;
-        let blue = rgb.red.clamp(0, 255) as u8;
-
-        RGB {
-            red,
-            green,
-            blue
-        }
-    }
-}
-
-
-impl From<Surface<RGB<i32>>> for Surface<RGB<u8>> {
-    fn from(surface: Surface<RGB<i32>>) -> Self {
-        let mut data: Vec<RGB<u8>> = Vec::new();
-        let width = surface.width;
-        let height = surface.height;
-        let iter = surface.data.iter();
-
-        for i in iter {
-            data.push(RGB::from(i));
-        }
-
-        Surface { data, width, height }
-    }
-}
-
 
 #[cfg(test)]
 mod tests {

@@ -60,7 +60,9 @@ impl BmpInfo {
     }
 }
 
-use crate::surface::{Surface, RGB};
+/*
+use crate::surface::Surface;
+use crate::pixel::RGB;
 pub fn read_image(info: &BmpInfo, f: &mut File) -> io::Result<Surface<RGB<i32>>> {
     let pack_len = info.width*3;
     let full_len = match (pack_len) % 4 {
@@ -88,3 +90,4 @@ pub fn read_image(info: &BmpInfo, f: &mut File) -> io::Result<Surface<RGB<i32>>>
 
     Ok(surface)
 }
+*/
