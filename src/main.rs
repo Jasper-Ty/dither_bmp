@@ -3,8 +3,14 @@ use std::io;
 use std::env;
 
 use dither_bmp::bmp;
+use dither_bmp::pixel::nearest;
 
 fn main() -> io::Result<()> {
+    for i in 0..=u8::MAX {
+        let p = nearest(i, 16, u8::MAX);
+        print!("{}|",p);
+    }
+
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("USAGE: {} BMP_FILE", &args[0]);
@@ -24,6 +30,7 @@ fn main() -> io::Result<()> {
         },
         _ => {}
     };
+
 
 
     Ok(())
