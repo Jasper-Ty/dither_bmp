@@ -2,22 +2,25 @@ pub mod bmp;
 pub mod util;
 pub mod surface;
 pub mod dither;
-pub mod clamped;
 pub mod pixel;
 pub mod quantize;
 
+use std::{
+    fs::File,
+    io::{ 
+        Write,
+        Seek, 
+        SeekFrom,
+        Result,
+    }
+};
+
 use surface::Surface;
 use pixel::Pix;
-use std::fs::File;
-use std::io::{ 
-    self, 
-    Write,
-    Seek, 
-    SeekFrom 
-};
 use bmp::BmpInfo;
 use util::ReadLittleEndian;
-pub fn read_rgb(info: &BmpInfo, f: &mut File) -> io::Result<Surface<Pix<i32>>> {
+
+pub fn read_rgb(info: &BmpInfo, f: &mut File) -> Result<Surface<Pix<i32>>> {
     let pack_len = info.width*3;
     let full_len = match (pack_len) % 4 {
         0 => pack_len,
@@ -45,7 +48,7 @@ pub fn read_rgb(info: &BmpInfo, f: &mut File) -> io::Result<Surface<Pix<i32>>> {
     Ok(surface)
 }
 
-pub fn write_rgb(info: &BmpInfo, f: &mut File, surface: &Surface<Pix<i32>>) -> io::Result<()> {
+pub fn write_rgb(info: &BmpInfo, f: &mut File, surface: &Surface<Pix<i32>>) -> Result<()> {
     let pack_len = info.width*3;
     let padding_bytes = match (pack_len) % 4 {
         0 => vec![],

@@ -1,8 +1,7 @@
 use std::{
     env,
     fs::File,
-    io:: {
-        self,
+    io::{
         Read,
         Write,
         Seek,

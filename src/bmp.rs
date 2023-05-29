@@ -1,18 +1,18 @@
-use std::fs::File;
-use std::io::{ 
-    self,
-    Seek,
-    SeekFrom,
-
-    Read,
-
-    Error, 
-    ErrorKind 
+use std::{
+    fs::File,
+    io::{
+        Seek,
+        SeekFrom,
+        Read,
+        Error, 
+        ErrorKind,
+        Result,
+    }
 };
 
 use super::util::ReadLittleEndian;
 
-pub fn check_sig(f: &mut File) -> io::Result<()> {
+pub fn check_sig(f: &mut File) -> Result<()> {
     let mut buf = [0; 2];
 
     f.read(&mut buf)?;
@@ -22,7 +22,7 @@ pub fn check_sig(f: &mut File) -> io::Result<()> {
     }
 }
 
-pub fn check_compression(f: &mut File) -> io::Result<()> {
+pub fn check_compression(f: &mut File) -> Result<()> {
     let mut buf = [0; 4];
 
     f.seek(SeekFrom::Start(30))?;
@@ -42,7 +42,7 @@ pub struct BmpInfo {
     pub bits_per_pixel: u16,
 }
 impl BmpInfo {
-    pub fn from_file(f: &mut File) -> io::Result<BmpInfo> {
+    pub fn from_file(f: &mut File) -> Result<BmpInfo> {
         f.seek(SeekFrom::Start(10))?;
         let offset = f.read_u32()? as u64;
         f.seek(SeekFrom::Start(18))?;
