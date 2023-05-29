@@ -1,8 +1,10 @@
-use crate::pixel::Pix;
-use crate::surface::Surface;
-use crate::quantize::{ 
-    QuantizationLevel,
-    Quantize,
+use crate::{
+    pixel::Pix,
+    surface::Surface,
+    quantize::{ 
+        QuantizationLevel,
+        Quantize,
+    }
 };
 
 pub fn dither(surface: &mut Surface<Pix<i32>>, q: &QuantizationLevel) {
