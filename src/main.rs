@@ -1,13 +1,14 @@
-use std::fs::File;
-use std::env;
-use std::io::{
-    self,
-
-    Read,
-    Write,
-
-    Seek,
-    SeekFrom,
+use std::{
+    env,
+    fs::File,
+    io:: {
+        self,
+        Read,
+        Write,
+        Seek,
+        SeekFrom,
+        Result,
+    }
 };
 
 use dither_bmp::bmp;
@@ -15,7 +16,7 @@ use dither_bmp::quantize::QuantizationLevel::*;
 use dither_bmp::{ read_rgb, write_rgb };
 use dither_bmp::dither::dither;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
         println!("USAGE: {} BMP_FILE OUT_FILE QUANTIZATION_LEVEL", &args[0]);
