@@ -48,20 +48,10 @@ impl Quantize for i32 {
     }
 }
 
-use crate::pixel::Pix;
-impl Quantize for Pix<u8> {
+use crate::pixel::RGB;
+impl Quantize for RGB<i32> {
     fn quantize(&self, q: &QuantizationLevel) -> Self {
-        match self {
-            Pix::RGB(r, g, b) => Pix::RGB(r.quantize(q), g.quantize(q), b.quantize(q)),
-            Pix::Gray(g) => Pix::Gray(g.quantize(q)),
-        }
-    }
-}
-impl Quantize for Pix<i32> {
-    fn quantize(&self, q: &QuantizationLevel) -> Self {
-        match self {
-            Pix::RGB(r, g, b) => Pix::RGB(r.quantize(q), g.quantize(q), b.quantize(q)),
-            Pix::Gray(g) => Pix::Gray(g.quantize(q)),
-        }
+        let RGB(r, g, b) = self;
+        RGB(r.quantize(q), g.quantize(q), b.quantize(q))
     }
 }

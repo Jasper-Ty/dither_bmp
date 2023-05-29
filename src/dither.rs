@@ -1,5 +1,10 @@
+use std::ops::{ 
+    Sub, 
+    Mul, 
+    Div, 
+    AddAssign 
+};
 use crate::{
-    pixel::Pix,
     surface::Surface,
     quantize::{ 
         QuantizationLevel,
@@ -7,30 +12,31 @@ use crate::{
     }
 };
 
-pub fn dither(surface: &mut Surface<Pix<i32>>, q: &QuantizationLevel) {
-    let width = surface.width();
-    let height = surface.height();
+pub fn dither<T>(surface: &mut Surface<T>, q: &QuantizationLevel)
+where
+    T: 
+        Copy + 
+        AddAssign + 
+        Sub<Output=T> + 
+        Mul<i32, Output=T> + 
+        Div<i32, Output=T> + 
+        Quantize,
+{
+    let width = surface.width() as i32;
+    let height = surface.height() as i32;
 
     for y in 0..height {
         for x in 0..width {
-            let pixel = surface[(x,y)];
+            let pixel = *surface.get(x,y).unwrap();
             let quantized = pixel.quantize(q);
             let error = pixel - quantized;
 
-            surface[(x,y)] = quantized;
+            *surface.get_mut(x, y).unwrap() = quantized;
 
-            if x+1< width {
-                surface[(x+1,y)] += (error * 7)/16;
-            }
-            if x > 0 && y+1 < height {
-                surface[(x-1,y+1)] += (error * 3)/16;
-            }
-            if y+1 < height {
-                surface[(x,y+1)] += (error * 5)/16;
-            }
-            if x+1 < width && y+1 < height {
-                surface[(x+1,y+1)] += (error * 1)/16;
-            }
+            surface.get_mut(x+1,y  ).map(|p| { *p += (error * 7)/16; });
+            surface.get_mut(x-1,y+1).map(|p| { *p += (error * 3)/16; });
+            surface.get_mut(x  ,y+1).map(|p| { *p += (error * 5)/16; });
+            surface.get_mut(x+1,y+1).map(|p| { *p += (error * 1)/16; });
         }
     }
 }

@@ -8,9 +8,8 @@ use std::{
     }
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct RGB<T: Copy>(T, T, T);
-pub struct Gray<T: Copy>(T);
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct RGB<T: Copy>(pub T, pub T, pub T);
 
 impl<T> Add for RGB<T>
 where
