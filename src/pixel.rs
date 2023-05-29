@@ -1,5 +1,13 @@
-use std::ops::{ Add, Sub, Mul, Div, AddAssign };
-use std::convert::From;
+use std::{
+    convert::From,
+    ops::{ 
+        Add, 
+        Sub, 
+        Mul, 
+        Div, 
+        AddAssign 
+    }
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Pix<T>{

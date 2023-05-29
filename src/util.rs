@@ -1,22 +1,22 @@
-use std::io::{self, Read};
+use std::io::{ Read, Result };
 
 pub trait ReadLittleEndian: Read {
-    fn read_u8 (&mut self) -> io::Result<u8>;
-    fn read_u16 (&mut self) -> io::Result<u16>;
-    fn read_u32 (&mut self) -> io::Result<u32>;
+    fn read_u8 (&mut self) -> Result<u8>;
+    fn read_u16 (&mut self) -> Result<u16>;
+    fn read_u32 (&mut self) -> Result<u32>;
 }
 impl<T: Read> ReadLittleEndian for T {
-    fn read_u8 (&mut self) -> io::Result<u8> {
+    fn read_u8 (&mut self) -> Result<u8> {
         let mut buf = [0; 1];
         self.read_exact(&mut buf)?;
         Ok(u8::from_le_bytes(buf))
     }
-    fn read_u16 (&mut self) -> io::Result<u16>{
+    fn read_u16 (&mut self) -> Result<u16>{
         let mut buf = [0; 2];
         self.read_exact(&mut buf)?;
         Ok(u16::from_le_bytes(buf))
     }
-    fn read_u32 (&mut self) -> io::Result<u32> {
+    fn read_u32 (&mut self) -> Result<u32> {
         let mut buf = [0; 4];
         self.read_exact(&mut buf)?;
         Ok(u32::from_le_bytes(buf))
