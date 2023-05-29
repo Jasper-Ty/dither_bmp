@@ -5,16 +5,18 @@ pub struct Surface<T> {
     width: u32,
     height: u32,
 }
+
 impl<T: Clone> Surface<T> {
     pub fn new(width: u32, height: u32, fill: T) -> Surface<T>{
-        let mut data: Vec<T> = Vec::with_capacity((width*height) as usize);
+        let mut data = Vec::with_capacity((width*height) as usize);
+
         for _ in 0..width*height {
             data.push(fill.clone());
         }
         Surface {
             data,
             width,
-            height
+            height,
         }
     }
     pub fn width(&self) -> u32 {
