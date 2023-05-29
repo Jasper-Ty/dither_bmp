@@ -48,6 +48,7 @@ fn main() -> Result<()> {
 
     match info.bits_per_pixel {
         24 => { 
+            f.seek(SeekFrom::Start(info.offset))?;
             let mut surface = read_rgb(&info, &mut f)?;
             dither(&mut surface, &q);
 
